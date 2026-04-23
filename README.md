@@ -33,6 +33,48 @@ Mini plateforme locale gérée par Terraform et Docker, pensée comme un petit p
 └── variables.tf
 ```
 
+## Schema d'architecture
+
+```mermaid
+flowchart LR
+    User[Utilisateur / Navigateur]
+
+    subgraph Host[Machine locale]
+        TF[Terraform]
+
+        subgraph Docker[Docker Engine]
+            subgraph Net[Reseau docker local-platform-dev-network ou local-platform-prod-network]
+                RP[Reverse Proxy<br/>Nginx]
+                FE[Frontend<br/>Nginx]
+                BE[Backend<br/>Python API]
+                REDIS[(Redis)]
+            end
+
+            V1[(Volume redis-data)]
+            V2[(Volume proxy-logs)]
+        end
+    end
+
+    User -->|HTTP localhost:8080 ou 8081| RP
+    RP -->|/| FE
+    RP -->|/api/*| BE
+    BE -->|TCP 6379| REDIS
+    REDIS --> V1
+    RP --> V2
+    TF -->|provisionne| RP
+    TF -->|provisionne| FE
+    TF -->|provisionne| BE
+    TF -->|provisionne| REDIS
+```
+
+Flux principal :
+
+- l'utilisateur entre par le reverse proxy
+- le reverse proxy route `/` vers le frontend
+- le reverse proxy route `/api/*` vers le backend
+- le backend utilise Redis sur le reseau Docker commun
+- Redis et les logs Nginx sont persistés dans des volumes Docker
+- Terraform cree et relie l'ensemble des ressources
 ## Prérequis
 
 - Docker installé et démarré
