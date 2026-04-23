@@ -2,17 +2,26 @@
 
 Mini plateforme locale gérée par Terraform et Docker, pensée comme un petit projet d'entreprise plutôt qu'une simple démo.
 
-## Ce que le projet met en place
+## Objectif
 
-- un réseau Docker dédié partagé par tous les services
+Ce projet montre comment organiser un dépôt d'infrastructure simple mais crédible, avec :
+
+- un provider Docker piloté par Terraform
+- un module réutilisable
+- une séparation `dev` / `prod`
+- des conventions de nommage cohérentes
+- des dépendances explicites entre services
+- des volumes persistants
+- des healthchecks
+- une documentation d'exploitation
+
+## Services déployés
+
+- un reverse proxy Nginx en entrée
 - un frontend Nginx statique
 - un backend Python minimal exposant `/api/info` et `/healthz`
-- un reverse proxy Nginx en entrée
 - un cache Redis avec volume persistant
-- des variables par environnement avec `env/dev.tfvars` et `env/prod.tfvars`
-- un module réutilisable dans `modules/local_platform`
-- des outputs propres pour les noms de containers, le réseau, les volumes et l'URL
-- des healthchecks sur chaque service
+- un réseau Docker dédié partagé par tous les services
 
 ## Structure
 
@@ -75,84 +84,65 @@ Flux principal :
 - le backend utilise Redis sur le reseau Docker commun
 - Redis et les logs Nginx sont persistés dans des volumes Docker
 - Terraform cree et relie l'ensemble des ressources
+
 ## Prérequis
 
 - Docker installé et démarré
 - Terraform 1.5+ installé localement
 
-## Déploiement local
+## Demarrage rapide
 
-Initialiser le provider :
+Initialiser le projet :
 
 ```bash
 terraform init
 ```
 
-Prévisualiser l'environnement de développement :
+Previsualiser l'environnement de developpement :
 
 ```bash
 terraform plan -var-file=env/dev.tfvars
 ```
 
-Créer la plateforme :
+Creer la plateforme :
 
 ```bash
 terraform apply -var-file=env/dev.tfvars
 ```
 
-Accéder à la plateforme :
+Acceder a la plateforme :
 
 - reverse proxy : `http://localhost:8080`
 - frontend direct : `http://localhost:18080`
 - backend direct : `http://localhost:18081/api/info`
 - redis local : `localhost:16379`
 
-Déployer la variante prod :
+## Environnements
+
+`dev`
+
+- expose le reverse proxy, le frontend, le backend et Redis sur l'hote
+- facilite les tests et le debug local
+
+`prod`
+
+- n'expose que le reverse proxy
+- simule un environnement plus ferme, proche d'une cible interne
+
+Commande pour la variante `prod` :
 
 ```bash
 terraform apply -var-file=env/prod.tfvars
 ```
 
-La variante `prod` n'expose que le reverse proxy, sur `http://localhost:8081`.
+URL de la variante `prod` :
 
-## Exploitation
+- reverse proxy : `http://localhost:8081`
 
-Lister les ressources créées :
+## Documentation
 
-```bash
-terraform state list
-```
-
-Voir les outputs utiles :
-
-```bash
-terraform output
-```
-
-Inspecter les containers :
-
-```bash
-docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-```
-
-Vérifier la santé applicative :
-
-```bash
-curl http://localhost:8080/healthz
-curl http://localhost:8080/api/info
-```
-
-Vérifier Redis :
-
-```bash
-docker exec -it local-platform-dev-redis redis-cli ping
-```
-
-Détruire l'environnement :
-
-```bash
-terraform destroy -var-file=env/dev.tfvars
-```
+- guide d'exploitation : [docs/OPERATIONS.md](docs/OPERATIONS.md)
+- documentation d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## Points pédagogiques couverts
 
