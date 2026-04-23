@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>__FRONTEND_TITLE__</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", sans-serif;
+        background: #f4f7fb;
+        color: #0f172a;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.16), transparent 25%),
+          #f4f7fb;
+      }
+
+      main {
+        width: min(720px, calc(100% - 2rem));
+        padding: 2rem;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+      }
+
+      p,
+      li {
+        line-height: 1.6;
+      }
+
+      code {
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        background: #e2e8f0;
+      }
+
+      #payload {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        border-radius: 16px;
+        background: #0f172a;
+        color: #e2e8f0;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>__FRONTEND_TITLE__</h1>
+      <p>This frontend is served by its own Nginx container and reaches the backend through the shared reverse proxy.</p>
+      <ul>
+        <li><code>/</code> serves this app</li>
+        <li><code>/api/info</code> is proxied to the backend</li>
+        <li><code>/healthz</code> is exposed by the reverse proxy</li>
+      </ul>
+      <pre id="payload">Loading backend status...</pre>
+    </main>
+    <script>
+      fetch("/api/info")
+        .then((response) => response.json())
+        .then((payload) => {
+          document.getElementById("payload").textContent = JSON.stringify(payload, null, 2);
+        })
+        .catch((error) => {
+          document.getElementById("payload").textContent = "Backend request failed: " + error;
+        });
+    </script>
+  </body>
+</html>
+
